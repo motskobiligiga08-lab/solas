@@ -49,13 +49,13 @@
       <div class="text-center my-12 text-slate-400">
         <div class="w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center mx-auto mb-3 text-2xl">✦</div>
         <h2 class="text-xl font-bold text-white mb-1">Welcome to Solas</h2>
-        <p class="text-sm text-slate-400">Type a prompt to chat, or use <code class="bg-slate-800 px-2 py-0.5 rounded text-indigo-300">/imagine prompt</code> to generate images.</p>
+        <p class="text-sm text-slate-400">Type a prompt to chat, <code class="bg-slate-800 px-2 py-0.5 rounded text-indigo-300">/imagine prompt</code> for photos, or <code class="bg-slate-800 px-2 py-0.5 rounded text-indigo-300">/video prompt</code> for AI clips.</p>
       </div>
     </div>
 
     <div class="p-4 glass border-t border-slate-800">
       <div class="max-w-4xl mx-auto relative flex items-center">
-        <textarea id="userInput" rows="1" placeholder="Message Solas or type /imagine for photos..." class="w-full bg-slate-900/80 text-white rounded-2xl pl-4 pr-12 py-3.5 border border-slate-700/60 focus:border-indigo-500 focus:outline-none resize-none text-sm"></textarea>
+        <textarea id="userInput" rows="1" placeholder="Message Solas, or use /imagine or /video..." class="w-full bg-slate-900/80 text-white rounded-2xl pl-4 pr-12 py-3.5 border border-slate-700/60 focus:border-indigo-500 focus:outline-none resize-none text-sm"></textarea>
         <button onclick="sendMessage()" class="absolute right-2 p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition shadow-lg shadow-indigo-600/30">
           <i class="fa-solid fa-arrow-up text-sm"></i>
         </button>
@@ -93,7 +93,7 @@
         <div class="text-center my-12 text-slate-400">
           <div class="w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center mx-auto mb-3 text-2xl">✦</div>
           <h2 class="text-xl font-bold text-white mb-1">Welcome to Solas</h2>
-          <p class="text-sm text-slate-400">Type a prompt to chat, or use <code class="bg-slate-800 px-2 py-0.5 rounded text-indigo-300">/imagine prompt</code> to generate images.</p>
+          <p class="text-sm text-slate-400">Type a prompt to chat, <code class="bg-slate-800 px-2 py-0.5 rounded text-indigo-300">/imagine prompt</code> for photos, or <code class="bg-slate-800 px-2 py-0.5 rounded text-indigo-300">/video prompt</code> for AI clips.</p>
         </div>`;
     }
 
@@ -116,7 +116,42 @@
       const container = document.getElementById('messagesContainer');
       container.innerHTML += `<div class="flex justify-end mb-4"><div class="bg-indigo-600 text-white py-2.5 px-4 rounded-2xl max-w-xl text-sm">${text}</div></div>`;
 
-      if (text.startsWith('/imagine')) {
+      // Handling Video Generation
+      if (text.startsWith('/video')) {
+        let prompt = text.replace('/video', '').trim();
+        if (!prompt) prompt = "a peaceful ocean sunset";
+
+        const loadingId = 'vid-' + Date.now();
+        container.innerHTML += `<div id="${loadingId}" class="flex justify-start mb-4"><div class="bg-slate-800 text-slate-300 p-4 rounded-2xl text-sm animate-pulse">✦ Generating video for "${prompt}"... (this may take 15–30s)</div></div>`;
+
+        const encodedPrompt = encodeURIComponent(prompt);
+        const videoUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=600&height=400&model=video&seed=${Math.floor(Math.random() * 100000)}`;
+
+        const video = document.createElement('video');
+        video.src = videoUrl;
+        video.autoplay = true;
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.className = "rounded-xl w-full object-cover";
+
+        video.onloadeddata = () => {
+          const loadingElem = document.getElementById(loadingId);
+          if (loadingElem) {
+            loadingElem.innerHTML = `<div class="bg-slate-800 p-2 rounded-2xl max-w-lg border border-slate-700 shadow-xl"></div>`;
+            loadingElem.querySelector('div').appendChild(video);
+          }
+        };
+
+        video.onerror = () => {
+          const loadingElem = document.getElementById(loadingId);
+          if (loadingElem) {
+            loadingElem.innerHTML = `<div class="bg-slate-800 text-red-400 p-4 rounded-2xl text-sm">❌ Video generation failed or timed out. Try again.</div>`;
+          }
+        };
+      } 
+      // Handling Image Generation
+      else if (text.startsWith('/imagine')) {
         let prompt = text.replace('/imagine', '').trim();
         if (!prompt) prompt = "beautiful scenery";
 
@@ -142,7 +177,9 @@
             loadingElem.innerHTML = `<div class="bg-slate-800 text-red-400 p-4 rounded-2xl text-sm">❌ Image generation failed. Please try again.</div>`;
           }
         };
-      } else {
+      } 
+      // Handling Gemini Chat Text
+      else {
         const geminiKey = localStorage.getItem('gemini_key');
         if (!geminiKey) {
           container.innerHTML += `<div class="flex justify-start mb-4"><div class="bg-slate-800 text-red-400 p-4 rounded-2xl text-sm">⚠️ Please add your Gemini API key in Persona & Settings.</div></div>`;
