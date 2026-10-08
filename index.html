@@ -138,7 +138,7 @@
         container.innerHTML += `<div id="${loadingId}" class="flex justify-start mb-4"><div class="bg-slate-800 text-slate-300 p-4 rounded-2xl text-sm animate-pulse">✦ Generating image... Please wait...</div></div>`;
         
         try {
-          const res = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
+          const res = await fetch("https://api-inference.huggingface.co/models/stable-diffusion-v1-5/stable-diffusion-v1-5", {
             headers: { 
               "Authorization": `Bearer ${hfKey}`, 
               "Content-Type": "application/json",
